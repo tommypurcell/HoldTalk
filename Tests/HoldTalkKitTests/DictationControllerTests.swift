@@ -187,4 +187,26 @@ final class DictationControllerTests: XCTestCase {
         await wait(0.5)
         XCTAssertEqual(pasted, [])
     }
+
+    func testPressingTheHotkeyPreparesTranscriptionAndTurningOffReleasesIt() async {
+        var prepared: [Config] = []
+        var released = 0
+        var config = Config()
+        config.language = "en"
+        let transcriber = SlowTranscriber(seconds: 0, text: "hi")
+        let controller = DictationController(
+            config: config, env: EnvFile(), recorder: recorder,
+            insert: { _, _ in .pasted },
+            makePipeline: { _, _ in DictationPipeline(transcribers: [transcriber], cleaner: nil) },
+            prepareTranscription: { prepared.append($0) },
+            releaseTranscription: { released += 1 })
+
+        XCTAssertEqual(prepared, [], "Nothing loads until you press the hotkey")
+        controller.handle(.hotkeyDown)
+        XCTAssertEqual(prepared, [config])
+        XCTAssertEqual(released, 0)
+
+        controller.setEnabled(false)
+        XCTAssertEqual(released, 1, "Turning off frees the model's memory")
+    }
 }
