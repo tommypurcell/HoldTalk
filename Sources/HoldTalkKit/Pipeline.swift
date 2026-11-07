@@ -61,7 +61,8 @@ public struct DictationPipeline {
     }
 
     /// Builds the pipeline the settings and .env ask for.
-    public static func make(config: Config, env: EnvFile, session: URLSession = .holdTalk) -> DictationPipeline {
+    public static func make(config: Config, env: EnvFile, session: URLSession = .holdTalk,
+                            whisperServer: WhisperServer? = nil) -> DictationPipeline {
         var transcribers: [Transcriber] = []
         var notices: [String] = []
 
@@ -86,7 +87,13 @@ public struct DictationPipeline {
 
         if let executable = config.whisperExecutable,
            FileManager.default.fileExists(atPath: config.modelURL.path) {
-            transcribers.append(WhisperCppTranscriber(executable: executable, model: config.modelURL, language: config.language))
+            let local = WhisperCppTranscriber(executable: executable, model: config.modelURL, language: config.language)
+            if let whisperServer {
+                transcribers.append(WhisperServerTranscriber(server: whisperServer, language: config.language,
+                                                             session: session, fallback: local))
+            } else {
+                transcribers.append(local)
+            }
         } else if transcribers.isEmpty {
             notices = [config.whisperExecutable == nil
                 ? "whisper-cli isn't installed. Run: brew install whisper-cpp"

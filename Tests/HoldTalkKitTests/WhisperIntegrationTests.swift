@@ -26,6 +26,85 @@ final class WhisperIntegrationTests: XCTestCase {
         if let folder { try? FileManager.default.removeItem(at: folder) }
     }
 
+    private func makeServer(idleSeconds: TimeInterval = 300) throws -> WhisperServer {
+        let config = Config()
+        let cli = try XCTUnwrap(config.whisperExecutable)
+        let executable = cli.deletingLastPathComponent().appendingPathComponent("whisper-server")
+        try XCTSkipUnless(FileManager.default.isExecutableFile(atPath: executable.path), "whisper-server isn't installed")
+        return WhisperServer(executable: executable, model: config.modelURL, idleSeconds: idleSeconds)
+    }
+
+    private func serverTranscriber(_ server: WhisperServer, fallback: Transcriber? = nil) -> WhisperServerTranscriber {
+        WhisperServerTranscriber(server: server, language: "en", session: .holdTalk, fallback: fallback ?? makeTranscriber())
+    }
+
+    func testServerTranscribesAndReusesTheSameProcess() async throws {
+        let server = try makeServer()
+        defer { server.stop() }
+        let first = try await serverTranscriber(server).transcribe(wav: wav)
+        XCTAssertTrue(first.lowercased().contains("quick brown fox"), first)
+        let port = server.port
+        let second = try await serverTranscriber(server).transcribe(wav: wav)
+        XCTAssertTrue(second.lowercased().contains("lazy dog"), second)
+        XCTAssertEqual(server.port, port, "The model stays loaded between dictations")
+    }
+
+    func testServerLineBreaksDoNotReachTheText() async throws {
+        let server = try makeServer()
+        defer { server.stop() }
+        let pipeline = DictationPipeline(transcribers: [serverTranscriber(server)], cleaner: nil)
+        let result = try await pipeline.run(wav: wav)
+        XCTAssertFalse(result.text.contains("\n"), result.text)
+        XCTAssertTrue(result.text.lowercased().contains("quick brown fox"), result.text)
+    }
+
+    func testCancellingKillsTheServerAndNeverReturnsText() async throws {
+        let server = try makeServer()
+        defer { server.stop() }
+        let long = folder.appendingPathComponent("long.wav")
+        let say = Process()
+        say.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+        say.arguments = ["-o", long.path, "--data-format=LEI16@16000", String(repeating: "This sentence is here to make the recording long. ", count: 40)]
+        try say.run()
+        say.waitUntilExit()
+
+        server.start()
+        let port = try XCTUnwrap(server.port)
+        let transcriber = serverTranscriber(server)
+        let task = Task { try await transcriber.transcribe(wav: long) }
+        try await Task.sleep(nanoseconds: 500_000_000)
+        task.cancel()
+        do {
+            _ = try await task.value
+            XCTFail("Cancelled work must not return text")
+        } catch {
+            XCTAssertTrue(error is CancellationError, "\(error)")
+        }
+        try await Task.sleep(nanoseconds: 500_000_000)
+        XCTAssertNil(server.port)
+        XCTAssertFalse(WhisperServer.acceptsConnections(port: port), "The server must be gone")
+    }
+
+    func testBrokenServerFallsBackToWhisperCli() async throws {
+        let server = WhisperServer(executable: URL(fileURLWithPath: "/nonexistent/whisper-server"), model: Config().modelURL)
+        defer { server.stop() }
+        let text = try await serverTranscriber(server).transcribe(wav: wav)
+        XCTAssertTrue(text.lowercased().contains("quick brown fox"), text)
+    }
+
+    func testIdleServerStopsAndStartsAgainWhenNeeded() async throws {
+        let server = try makeServer(idleSeconds: 1)
+        defer { server.stop() }
+        _ = try await serverTranscriber(server).transcribe(wav: wav)
+        let port = try XCTUnwrap(server.port)
+        try await Task.sleep(nanoseconds: 1_800_000_000)
+        XCTAssertNil(server.port, "Idle servers release their memory")
+        XCTAssertFalse(WhisperServer.acceptsConnections(port: port))
+
+        let text = try await serverTranscriber(server).transcribe(wav: wav)
+        XCTAssertTrue(text.lowercased().contains("lazy dog"), text)
+    }
+
     private func makeTranscriber() -> WhisperCppTranscriber {
         let config = Config()
         return WhisperCppTranscriber(executable: config.whisperExecutable!, model: config.modelURL, language: "auto")

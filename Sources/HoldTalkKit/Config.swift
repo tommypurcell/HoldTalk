@@ -13,6 +13,8 @@ public struct Config: Codable, Equatable {
     public var language = "auto"
     /// Overrides the default speech model for the groq or openai transcriber.
     public var transcriberModel: String?
+    /// Keeps the local model loaded while you dictate, using more memory for faster text.
+    public var whisperServer = true
 
     public var cleanupEnabled = true
     /// "auto" uses the first key found in .env. Otherwise "groq", "anthropic" or "openai".
@@ -33,7 +35,7 @@ public struct Config: Codable, Equatable {
     public init() {}
 
     private enum CodingKeys: String, CodingKey, CaseIterable {
-        case hotkey, transcriber, localModel, whisperPath, language, transcriberModel
+        case hotkey, transcriber, localModel, whisperPath, language, transcriberModel, whisperServer
         case cleanupEnabled, cleanupProvider, cleanupModel, casing, cleanupTimeoutSeconds
         case restoreClipboard, maxRecordingSeconds, tapMaxMilliseconds, doubleTapWindowMilliseconds
     }
@@ -55,6 +57,7 @@ public struct Config: Codable, Equatable {
         whisperPath = try values.decodeIfPresent(String.self, forKey: .whisperPath)
         language = try read(.language, defaults.language)
         transcriberModel = try values.decodeIfPresent(String.self, forKey: .transcriberModel)
+        whisperServer = try read(.whisperServer, defaults.whisperServer)
         cleanupEnabled = try read(.cleanupEnabled, defaults.cleanupEnabled)
         cleanupProvider = try read(.cleanupProvider, defaults.cleanupProvider)
         cleanupModel = try values.decodeIfPresent(String.self, forKey: .cleanupModel)

@@ -26,6 +26,7 @@ Everything is in `Sources/HoldTalkKit/`, except the small entry point in `Source
 | `HotkeyMonitor.swift`, `Hotkey.swift` | Watches the hotkey and Esc, and parses hotkey settings |
 | `Recorder.swift`, `Audio.swift` | Records the mic and converts it to 16 kHz mono |
 | `Transcription.swift` | Runs `whisper-cli` or calls the Groq or OpenAI API |
+| `WhisperServer.swift` | Keeps `whisper-server` running while you dictate, and falls back to `whisper-cli` |
 | `Cleanup.swift`, `Pipeline.swift` | LLM cleanup, and the choice of providers |
 | `TextInserter.swift`, `Clipboard.swift` | Pastes with Cmd-V and handles the clipboard |
 | `Pill.swift`, `MenuBarApp.swift` | The floating pill and the menu bar |
@@ -42,7 +43,7 @@ Everything is in `Sources/HoldTalkKit/`, except the small entry point in `Source
 
 **Behavior**
 
-- Esc must never paste, and must stop any running `whisper-cli`.
+- Esc must never paste, and must stop any running `whisper-cli` or `whisper-server` work.
 - The keyboard watcher stays listen-only, so Esc still reaches the user's app.
 - Keep the recording limit in both modes.
 - If cleanup fails, paste the raw transcript rather than losing it.

@@ -15,6 +15,8 @@ public final class DictationController {
     private let recorder: AudioRecording
     private let insert: (String, Bool) -> TextInserter.Outcome
     private let makePipeline: (Config, EnvFile) -> DictationPipeline
+    private let prepareTranscription: (Config) -> Void
+    private let releaseTranscription: () -> Void
     private let pill = PillWindow()
 
     private var secondTapTimer: DispatchWorkItem?
@@ -26,20 +28,27 @@ public final class DictationController {
 
     public convenience init(config: Config, env: EnvFile) {
         let inserter = TextInserter()
+        let servers = WhisperServerHost()
         self.init(config: config, env: env, recorder: Recorder(),
                   insert: { inserter.insert($0, restoreClipboard: $1) },
-                  makePipeline: { DictationPipeline.make(config: $0, env: $1) })
+                  makePipeline: { DictationPipeline.make(config: $0, env: $1, whisperServer: servers.server(for: $0)) },
+                  prepareTranscription: { servers.server(for: $0)?.start() },
+                  releaseTranscription: { servers.stop() })
     }
 
     /// Tests pass a fake recorder and paste here, so they can't type into other apps.
     init(config: Config, env: EnvFile, recorder: AudioRecording,
          insert: @escaping (String, Bool) -> TextInserter.Outcome,
-         makePipeline: @escaping (Config, EnvFile) -> DictationPipeline) {
+         makePipeline: @escaping (Config, EnvFile) -> DictationPipeline,
+         prepareTranscription: @escaping (Config) -> Void = { _ in },
+         releaseTranscription: @escaping () -> Void = {}) {
         self.config = config
         self.env = env
         self.recorder = recorder
         self.insert = insert
         self.makePipeline = makePipeline
+        self.prepareTranscription = prepareTranscription
+        self.releaseTranscription = releaseTranscription
         machine = Self.makeMachine(config)
         recorder.onLevel = { [weak self] level in
             MainActor.assumeIsolated { self?.pill.setLevel(level) }
@@ -75,6 +84,7 @@ public final class DictationController {
         } else {
             send(.shutDown)
             monitor.stop()
+            releaseTranscription()
         }
     }
 
@@ -114,6 +124,7 @@ public final class DictationController {
         case .startRecording:
             recordingStarted = Date()
             pill.setLevel(0)
+            prepareTranscription(config)
             recorder.start()
             startLimitTimer()
             onRecordingChanged?(true)
