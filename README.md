@@ -1,5 +1,26 @@
 > **AI agents:** read [AGENTS.md](AGENTS.md) first.
 
+<div align="center">
+
+```text
+██╗  ██╗ ██████╗ ██╗     ██████╗ ████████╗ █████╗ ██╗     ██╗  ██╗
+██║  ██║██╔═══██╗██║     ██╔══██╗╚══██╔══╝██╔══██╗██║     ██║ ██╔╝
+███████║██║   ██║██║     ██║  ██║   ██║   ███████║██║     █████╔╝ 
+██╔══██║██║   ██║██║     ██║  ██║   ██║   ██╔══██║██║     ██╔═██╗ 
+██║  ██║╚██████╔╝███████╗██████╔╝   ██║   ██║  ██║███████╗██║  ██╗
+╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═════╝    ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+```
+
+**Hold a key. Speak. Let go.**
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![macOS 13+](https://img.shields.io/badge/macOS-13%2B-black?logo=apple)
+![Swift](https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white)
+![Runs locally](https://img.shields.io/badge/runs-locally-brightgreen)
+![No telemetry](https://img.shields.io/badge/telemetry-none-brightgreen)
+
+</div>
+
 # HoldTalk
 
 Free, open-source dictation for your Mac. Hold a key, speak, and let go. The text appears at your cursor.
