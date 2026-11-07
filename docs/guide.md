@@ -73,6 +73,7 @@ Put keys in `~/.config/holdtalk/.env`, using the names in `.env.example`, then c
 ## Good to know
 
 - **No text cursor:** HoldTalk doesn't check for one. It sends Cmd-V to the app in front, and if nothing takes the paste, the text stays on your clipboard. With `restoreClipboard` on, that text is lost after 0.6 seconds.
+- **Spaces between dictations:** HoldTalk reads the one character before your cursor and adds a space if it's needed. It keeps nothing. If an app won't share that character, it adds a space when you dictated into the same app in the last 5 minutes, which can leave an extra space. The space is typed as a keypress, so it isn't on the clipboard.
 - **Sleep and lock:** recording or transcribing in progress is dropped when the Mac sleeps, locks or switches user.
 - **Password fields:** while macOS Secure Input is on, HoldTalk may not see Esc, and a paste may be blocked.
 - **Chords:** with a single-key hotkey, pressing another key within 1 second cancels, so fn+arrow doesn't start dictation.
