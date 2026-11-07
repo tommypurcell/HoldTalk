@@ -59,6 +59,7 @@ Tests are in `Tests/HoldTalkKitTests/`, the app bundle's settings are in `Resour
 
 **Tests**
 
+- Every new feature and bug fix needs unit tests in the same pull request.
 - Tests must never post real key events, because they would type into the user's apps.
 - Never call a paid API from a test. Use the mock in `PipelineTests.swift`.
 
@@ -69,6 +70,6 @@ Tests are in `Tests/HoldTalkKitTests/`, the app bundle's settings are in `Resour
 ## Pull requests
 
 1. Work on a branch. `main` is protected, and only the maintainer merges.
-2. Keep each change focused, and add a test if it changes behavior.
+2. Keep each change focused, and include unit tests for it.
 3. Run `swift test` and report the result.
 4. Say what you ran in the real app and what you didn't. The live hotkey, paste and permission flows can't be covered by `swift test`, so ask a person to try them.

@@ -14,7 +14,7 @@ scripts/build-app.sh     # Builds build/HoldTalk.app without installing
 ## Send a pull request
 
 1. Fork the repo and create a branch.
-2. Make one focused change, and add a test if it changes behavior.
+2. Make one focused change, and include unit tests for it.
 3. Run `swift test`.
 4. Open a pull request saying what changed, and what you tried in the real app.
 
