@@ -184,12 +184,23 @@ public struct WhisperServerTranscriber: Transcriber {
     let language: String
     let session: URLSession
     let fallback: Transcriber
+    let tailoredWindow: Bool
 
-    public init(server: WhisperServer, language: String, session: URLSession, fallback: Transcriber) {
+    public init(server: WhisperServer, language: String, session: URLSession, fallback: Transcriber,
+                tailoredWindow: Bool = false) {
         self.server = server
         self.language = language
         self.session = session
         self.fallback = fallback
+        self.tailoredWindow = tailoredWindow
+    }
+
+    /// Whisper normally processes 30 seconds of audio (1500 units, so 50 per second), even
+    /// for a short clip. This covers the clip plus 2 seconds. Nil means use the full window.
+    static func audioWindow(audioBytes: Int) -> Int? {
+        let seconds = Double(max(0, audioBytes - 44)) / (SpeechAudio.sampleRate * 2)
+        let window = Int(((seconds + 2) * 50).rounded(.up))
+        return window < 1500 ? window : nil
     }
 
     public func transcribe(wav: URL) async throws -> String {
@@ -208,15 +219,7 @@ public struct WhisperServerTranscriber: Transcriber {
 
     private func send(wav: URL, port: UInt16) async throws -> String {
         let boundary = "holdtalk-\(UUID().uuidString)"
-        var body = Data()
-        func field(_ name: String, _ value: String) {
-            body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n".utf8))
-        }
-        field("language", language)
-        field("response_format", "json")
-        body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"speech.wav\"\r\nContent-Type: audio/wav\r\n\r\n".utf8))
-        body.append(try Data(contentsOf: wav))
-        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        let body = requestBody(audio: try Data(contentsOf: wav), boundary: boundary)
 
         var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/inference")!, timeoutInterval: 300)
         request.httpMethod = "POST"
@@ -226,5 +229,21 @@ public struct WhisperServerTranscriber: Transcriber {
         try HTTP.check(response, data, service: "whisper-server")
         struct Reply: Decodable { let text: String }
         return try JSONDecoder().decode(Reply.self, from: data).text
+    }
+
+    func requestBody(audio: Data, boundary: String) -> Data {
+        var body = Data()
+        func field(_ name: String, _ value: String) {
+            body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n".utf8))
+        }
+        field("language", language)
+        field("response_format", "json")
+        if tailoredWindow, let window = Self.audioWindow(audioBytes: audio.count) {
+            field("audio_ctx", String(window))
+        }
+        body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"speech.wav\"\r\nContent-Type: audio/wav\r\n\r\n".utf8))
+        body.append(audio)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        return body
     }
 }

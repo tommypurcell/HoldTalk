@@ -42,6 +42,7 @@ menu. If the file has a mistake, the menu shows the error and the running settin
 | `transcriberModel` | Provider's default | Groq: `whisper-large-v3-turbo`. OpenAI: `gpt-transcribe`. |
 | `localModel` | `"small"` | `small`, `medium`, or a full path to a ggml model |
 | `whisperServer` | `true` | `true` keeps the local model loaded with `whisper-server` while you dictate, for faster text. It uses extra memory, about 860 MB with `small` on Apple silicon, and stops after 5 idle minutes. `false` starts `whisper-cli` each time. |
+| `tailoredWindow` | `false` | `true` has `whisper-server` process only as much audio as each clip needs, which makes short clips faster. It's experimental, and could reduce accuracy. Needs `whisperServer`. |
 | `whisperPath` | Found automatically | Full path to `whisper-cli`. `whisper-server` must be in the same folder. |
 | `language` | `"auto"` | `auto` or a code such as `en`. Setting it improves accuracy on very short clips. |
 | `cleanupEnabled` | `true` | `false` pastes the raw transcript |

@@ -15,6 +15,8 @@ public struct Config: Codable, Equatable {
     public var transcriberModel: String?
     /// Keeps the local model loaded while you dictate, using more memory for faster text.
     public var whisperServer = true
+    /// Has whisper-server process only as much audio as the clip needs. Faster, but less proven.
+    public var tailoredWindow = false
 
     public var cleanupEnabled = true
     /// "auto" uses the first key found in .env. Otherwise "groq", "anthropic" or "openai".
@@ -35,7 +37,7 @@ public struct Config: Codable, Equatable {
     public init() {}
 
     private enum CodingKeys: String, CodingKey, CaseIterable {
-        case hotkey, transcriber, localModel, whisperPath, language, transcriberModel, whisperServer
+        case hotkey, transcriber, localModel, whisperPath, language, transcriberModel, whisperServer, tailoredWindow
         case cleanupEnabled, cleanupProvider, cleanupModel, casing, cleanupTimeoutSeconds
         case restoreClipboard, maxRecordingSeconds, tapMaxMilliseconds, doubleTapWindowMilliseconds
     }
@@ -58,6 +60,7 @@ public struct Config: Codable, Equatable {
         language = try read(.language, defaults.language)
         transcriberModel = try values.decodeIfPresent(String.self, forKey: .transcriberModel)
         whisperServer = try read(.whisperServer, defaults.whisperServer)
+        tailoredWindow = try read(.tailoredWindow, defaults.tailoredWindow)
         cleanupEnabled = try read(.cleanupEnabled, defaults.cleanupEnabled)
         cleanupProvider = try read(.cleanupProvider, defaults.cleanupProvider)
         cleanupModel = try values.decodeIfPresent(String.self, forKey: .cleanupModel)

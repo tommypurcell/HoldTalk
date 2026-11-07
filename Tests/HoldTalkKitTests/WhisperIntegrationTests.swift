@@ -49,6 +49,16 @@ final class WhisperIntegrationTests: XCTestCase {
         XCTAssertEqual(server.port, port, "The model stays loaded between dictations")
     }
 
+    func testServerTranscribesWithATailoredWindow() async throws {
+        let server = try makeServer()
+        defer { server.stop() }
+        let transcriber = WhisperServerTranscriber(server: server, language: "auto", session: .holdTalk,
+                                                   fallback: makeTranscriber(), tailoredWindow: true)
+        let text = try await transcriber.transcribe(wav: wav)
+        XCTAssertTrue(text.lowercased().contains("quick brown fox"), text)
+        XCTAssertNotNil(server.port, "It must not have fallen back after a server failure")
+    }
+
     func testServerLineBreaksDoNotReachTheText() async throws {
         let server = try makeServer()
         defer { server.stop() }
