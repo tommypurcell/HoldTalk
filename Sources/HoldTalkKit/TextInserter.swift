@@ -11,7 +11,16 @@ public final class TextInserter {
         case copiedOnly
     }
 
+    /// What's just before the cursor, as far as the focused app will say.
+    enum TextBefore: Equatable {
+        case unknown
+        case startOfField
+        case character(Character)
+    }
+
     private let clipboard = ClipboardSwap()
+    private var lastPasteApp: pid_t?
+    private var lastPasteTime = Date.distantPast
 
     public init() {}
 
@@ -21,14 +30,70 @@ public final class TextInserter {
             clipboard.put(text, willRestore: false)
             return .copiedOnly
         }
+        let app = NSWorkspace.shared.frontmostApplication?.processIdentifier
+        let recentlyPastedHere = app != nil && app == lastPasteApp && Date().timeIntervalSince(lastPasteTime) < 300
+        let before = Self.textBeforeCursor()
+        let addSpace = Self.needsSpace(before: before, adding: text, recentlyPastedHere: recentlyPastedHere)
         clipboard.put(text, willRestore: restoreClipboard)
+        // Typed rather than pasted, because terminals can strip a space from the start of a paste.
+        if addSpace { Self.sendSpace() }
         Self.sendPaste()
+        lastPasteApp = app
+        lastPasteTime = Date()
         if restoreClipboard {
             // Apps read the clipboard some time after Cmd-V, so wait before swapping back.
             let clipboard = self.clipboard
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { clipboard.restore() }
         }
         return .pasted
+    }
+
+    /// Keeps dictations from running together, without doubling spaces. Some apps won't
+    /// share the text around the cursor, so then it goes by whether we just pasted there.
+    static func needsSpace(before: TextBefore, adding text: String, recentlyPastedHere: Bool) -> Bool {
+        if let first = text.first, first.isWhitespace || ".,!?;:)]}".contains(first) { return false }
+        switch before {
+        case .startOfField:
+            return false
+        case .character(let character):
+            return !character.isWhitespace && !"([{\"'“‘".contains(character)
+        case .unknown:
+            return recentlyPastedHere
+        }
+    }
+
+    /// Reads one character only, and keeps nothing.
+    private static func textBeforeCursor() -> TextBefore {
+        let system = AXUIElementCreateSystemWide()
+        // An app that's stuck must not hold up the paste.
+        AXUIElementSetMessagingTimeout(system, 0.1)
+        var focused: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(system, kAXFocusedUIElementAttribute as CFString, &focused) == .success,
+              let focused, CFGetTypeID(focused) == AXUIElementGetTypeID() else { return .unknown }
+        let element = focused as! AXUIElement
+        AXUIElementSetMessagingTimeout(element, 0.1)
+
+        var selection: CFTypeRef?
+        var selected = CFRange()
+        guard AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &selection) == .success,
+              let selection, CFGetTypeID(selection) == AXValueGetTypeID(),
+              AXValueGetValue(selection as! AXValue, .cfRange, &selected) else { return .unknown }
+        guard selected.location > 0 else { return .startOfField }
+
+        var previous = CFRange(location: selected.location - 1, length: 1)
+        var character: CFTypeRef?
+        guard let range = AXValueCreate(.cfRange, &previous),
+              AXUIElementCopyParameterizedAttributeValue(element, kAXStringForRangeParameterizedAttribute as CFString,
+                                                         range, &character) == .success,
+              let string = character as? String, let last = string.last else { return .unknown }
+        return .character(last)
+    }
+
+    private static func sendSpace() {
+        let source = CGEventSource(stateID: .privateState)
+        let key = CGKeyCode(kVK_Space)
+        CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: true)?.post(tap: .cgSessionEventTap)
+        CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false)?.post(tap: .cgSessionEventTap)
     }
 
     private static func sendPaste() {
