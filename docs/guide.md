@@ -6,7 +6,7 @@
 | --- | --- |
 | Hold the hotkey | Records while held. Transcribes and pastes on release. |
 | Double-tap the hotkey | Hands-free: records with nothing held. One more tap stops and pastes. |
-| Press Esc | Drops the recording, or kills a running transcription. Esc still reaches your app too. |
+| Press Esc | Pauses the recording with the mic off, and shows **press \<hotkey\> to undo** on the pill for 5 seconds. Press the hotkey again to keep the same recording (one more tap finishes it), or do nothing and the audio is deleted. Esc during transcription still kills it. Esc always reaches your app too. |
 | Reach the limit | Recording stops and transcribes at 5 minutes, in either mode. |
 
 A single quick tap is treated as an accident and thrown away.
@@ -77,5 +77,6 @@ Put keys in `~/.config/holdtalk/.env`, using the names in `.env.example`, then c
 - **Password fields:** while macOS Secure Input is on, HoldTalk may not see Esc, and a paste may be blocked.
 - **Chords:** with a single-key hotkey, pressing another key within 1 second cancels, so fn+arrow doesn't start dictation.
 - **While transcribing:** the hotkey is ignored until the current text is pasted, or until you press Esc.
+- **After Esc:** the recording is paused, not gone: for 5 seconds the hotkey takes the undo, with everything said so far still in it. The mic is off during that window and the pill's dot is amber and still, so it's clear nothing is being captured. The 5-minute limit keeps running across the pause, so undoing can't buy extra recording time. The audio never touches disk; it's deleted the moment the window ends.
 - **Start-up delay:** the mic takes a moment to open, so start speaking just after you press.
 - **Odd output in silence:** Whisper can invent text for very quiet audio. HoldTalk drops silent audio and Whisper's markers, but background noise can still get through.

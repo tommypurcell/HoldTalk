@@ -4,9 +4,11 @@ import XCTest
 private final class FakeRecorder: AudioRecording {
     var onLevel: ((Float) -> Void)?
     var onFailure: ((String) -> Void)?
-    var starts = 0, finishes = 0, discards = 0
+    var starts = 0, finishes = 0, discards = 0, pauses = 0, resumes = 0
     var audio = SpeechAudio(samples: Array(repeating: 0.2, count: 16_000))
     func start() { starts += 1 }
+    func pause() { pauses += 1 }
+    func resume() { resumes += 1 }
     func finish() async -> SpeechAudio { finishes += 1; return audio }
     func discard() { discards += 1 }
 }
@@ -101,7 +103,7 @@ final class DictationControllerTests: XCTestCase {
         XCTAssertEqual(pasted, ["must not appear"], "The next dictation still works")
     }
 
-    func testEscWhileRecordingDiscardsWithoutTranscribing() async {
+    func testEscWhileRecordingPausesForUndoAndTimeoutDiscards() async {
         let transcriber = SlowTranscriber(seconds: 0, text: "no")
         let controller = makeController(transcriber: transcriber)
         controller.handle(.hotkeyDown)
@@ -109,9 +111,45 @@ final class DictationControllerTests: XCTestCase {
         controller.handle(.escape)
         controller.handle(.hotkeyUp)
         await wait(0.2)
-        XCTAssertEqual(recorder.discards, 1)
+        XCTAssertEqual(recorder.pauses, 1)
+        XCTAssertEqual(recorder.discards, 0, "Audio is kept briefly so undo is possible")
         XCTAssertEqual(recorder.finishes, 0)
         XCTAssertNil(transcriber.wavPath)
+        XCTAssertEqual(pasted, [])
+
+        await wait(5.4)
+        XCTAssertEqual(recorder.discards, 1, "The undo window discards the audio")
+        XCTAssertEqual(pasted, [])
+    }
+
+    func testUndoResumesRecordingAndFinishesNormally() async {
+        let transcriber = SlowTranscriber(seconds: 0, text: "still there")
+        let controller = makeController(transcriber: transcriber)
+        controller.handle(.hotkeyDown)
+        await wait(0.3)
+        controller.handle(.escape)
+        await wait(0.1)
+        controller.handle(.hotkeyDown)
+        controller.handle(.hotkeyUp)
+        await wait(0.1)
+        XCTAssertEqual(recorder.resumes, 1)
+        XCTAssertEqual(recorder.discards, 0, "Undo keeps the audio")
+
+        controller.handle(.hotkeyDown)
+        await wait(0.3)
+        XCTAssertEqual(recorder.finishes, 1)
+        XCTAssertEqual(recorder.starts, 1, "Undo resumes instead of starting over")
+        XCTAssertEqual(pasted, ["still there"])
+    }
+
+    func testSecondEscapeDuringUndoWindowDiscards() async {
+        let controller = makeController(transcriber: SlowTranscriber(seconds: 0, text: "no"))
+        controller.handle(.hotkeyDown)
+        await wait(0.3)
+        controller.handle(.escape)
+        controller.handle(.escape)
+        await wait(0.2)
+        XCTAssertEqual(recorder.discards, 1)
         XCTAssertEqual(pasted, [])
     }
 

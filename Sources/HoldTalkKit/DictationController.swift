@@ -18,6 +18,7 @@ public final class DictationController {
     private let pill = PillWindow()
 
     private var secondTapTimer: DispatchWorkItem?
+    private var undoTimer: DispatchWorkItem?
     private var limitTimer: Timer?
     private var recordingStarted = Date()
     private var stoppedAtLimit = false
@@ -129,6 +130,20 @@ public final class DictationController {
             onRecordingChanged?(false)
             pill.hide()
 
+        case .pauseRecording:
+            // The limit clock keeps ticking on purpose: pausing must not buy
+            // extra recording time. The pill shows the undo offer instead of
+            // the meter, and the mic reports as off.
+            recorder.pause()
+            onRecordingChanged?(false)
+
+        case .resumeRecording:
+            // recordingStarted is untouched, so the limit still counts from
+            // when the recording first began.
+            pill.setLevel(0)
+            recorder.resume()
+            onRecordingChanged?(true)
+
         case .cancelProcessing:
             processingTask?.cancel()
             processingTask = nil
@@ -142,6 +157,15 @@ public final class DictationController {
         case .cancelSecondTapTimer:
             secondTapTimer?.cancel()
             secondTapTimer = nil
+
+        case .startUndoTimer(let delay):
+            let work = DispatchWorkItem { [weak self] in self?.send(.undoWindowTimedOut) }
+            undoTimer = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+
+        case .cancelUndoTimer:
+            undoTimer?.cancel()
+            undoTimer = nil
         }
     }
 
@@ -151,6 +175,8 @@ public final class DictationController {
             pill.show(.holding)
         case .handsFree:
             pill.show(handsFreeContent())
+        case .awaitingUndo:
+            pill.show(.cancelled(hint: "press \(config.hotkey) to undo"))
         case .processing:
             pill.show(.transcribing)
         case .idle:

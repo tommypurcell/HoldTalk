@@ -54,21 +54,88 @@ final class DictationMachineTests: XCTestCase {
         XCTAssertEqual(machine.state, .processing)
     }
 
-    func testEscapeDropsRecordingInEveryRecordingState() {
+    func testEscapeDuringHoldOffersUndoThenTimesOut() {
         _ = machine.handle(.hotkeyDown(at: 10))
-        XCTAssertEqual(machine.handle(.escape), [.discardRecording])
-        XCTAssertEqual(machine.state, .idle)
-        XCTAssertEqual(machine.handle(.hotkeyUp(at: 11)), [], "Release after Esc does nothing")
+        XCTAssertEqual(machine.handle(.escape), [.pauseRecording, .startUndoTimer(5.0)])
+        XCTAssertEqual(machine.state, .awaitingUndo)
+        XCTAssertFalse(machine.isRecording, "The mic is off while undo is offered")
+        XCTAssertEqual(machine.handle(.hotkeyUp(at: 11)), [], "Release during the window does nothing")
 
-        _ = machine.handle(.hotkeyDown(at: 20))
-        _ = machine.handle(.hotkeyUp(at: 20.1))
-        XCTAssertEqual(machine.handle(.escape), [.cancelSecondTapTimer, .discardRecording])
+        XCTAssertEqual(machine.handle(.undoWindowTimedOut), [.discardRecording])
         XCTAssertEqual(machine.state, .idle)
+    }
 
-        _ = machine.handle(.hotkeyDown(at: 30))
-        _ = machine.handle(.hotkeyUp(at: 30.1))
-        _ = machine.handle(.hotkeyDown(at: 30.2))
-        XCTAssertEqual(machine.handle(.escape), [.discardRecording])
+    func testEscapeDuringAwaitingSecondTapOffersUndo() {
+        _ = machine.handle(.hotkeyDown(at: 10))
+        _ = machine.handle(.hotkeyUp(at: 10.1))
+        XCTAssertEqual(machine.handle(.escape), [.cancelSecondTapTimer, .pauseRecording, .startUndoTimer(5.0)])
+        XCTAssertEqual(machine.state, .awaitingUndo)
+        XCTAssertEqual(machine.handle(.undoWindowTimedOut), [.discardRecording])
+        XCTAssertEqual(machine.state, .idle)
+    }
+
+    func testEscapeDuringHandsFreeOffersUndo() {
+        _ = machine.handle(.hotkeyDown(at: 10))
+        _ = machine.handle(.hotkeyUp(at: 10.1))
+        _ = machine.handle(.hotkeyDown(at: 10.2))
+        XCTAssertEqual(machine.handle(.escape), [.pauseRecording, .startUndoTimer(5.0)])
+        XCTAssertEqual(machine.state, .awaitingUndo)
+    }
+
+    func testUndoResumesHandsFreeAndATapFinishes() {
+        _ = machine.handle(.hotkeyDown(at: 10))
+        _ = machine.handle(.escape)
+        XCTAssertEqual(machine.handle(.hotkeyDown(at: 12)), [.cancelUndoTimer, .resumeRecording])
+        XCTAssertEqual(machine.state, .handsFree)
+        XCTAssertTrue(machine.isRecording)
+
+        XCTAssertEqual(machine.handle(.hotkeyUp(at: 12.1)), [], "Release after undo must not finish")
+        XCTAssertEqual(machine.handle(.hotkeyDown(at: 20)), [.finishRecording])
+        XCTAssertEqual(machine.state, .processing)
+    }
+
+    func testUndoAfterTapKeepsEarlierAudioAndTranscribesOnStop() {
+        _ = machine.handle(.hotkeyDown(at: 10))
+        _ = machine.handle(.hotkeyUp(at: 10.1))
+        _ = machine.handle(.escape)
+        _ = machine.handle(.hotkeyDown(at: 11))
+        XCTAssertEqual(machine.state, .handsFree)
+        XCTAssertEqual(machine.handle(.hotkeyDown(at: 20)), [.finishRecording])
+    }
+
+    func testSecondEscapeDuringUndoWindowDiscardsNow() {
+        _ = machine.handle(.hotkeyDown(at: 10))
+        _ = machine.handle(.escape)
+        XCTAssertEqual(machine.handle(.escape), [.cancelUndoTimer, .discardRecording])
+        XCTAssertEqual(machine.state, .idle)
+    }
+
+    func testUndoKeepsTheRecordingLimit() {
+        _ = machine.handle(.hotkeyDown(at: 10))
+        _ = machine.handle(.escape)
+        _ = machine.handle(.hotkeyDown(at: 12))
+        XCTAssertEqual(machine.handle(.recordingLimitReached), [.finishRecording])
+        XCTAssertEqual(machine.state, .processing)
+    }
+
+    func testLimitDuringUndoWindowDiscards() {
+        _ = machine.handle(.hotkeyDown(at: 10))
+        _ = machine.handle(.escape)
+        XCTAssertEqual(machine.handle(.recordingLimitReached), [.cancelUndoTimer, .discardRecording])
+        XCTAssertEqual(machine.state, .idle)
+    }
+
+    func testShutDownDuringUndoWindowDiscards() {
+        _ = machine.handle(.hotkeyDown(at: 10))
+        _ = machine.handle(.escape)
+        XCTAssertEqual(machine.handle(.shutDown), [.cancelUndoTimer, .discardRecording])
+        XCTAssertEqual(machine.state, .idle)
+    }
+
+    func testMicFailureDuringUndoWindowDiscards() {
+        _ = machine.handle(.hotkeyDown(at: 10))
+        _ = machine.handle(.escape)
+        XCTAssertEqual(machine.handle(.recordingFailed), [.cancelUndoTimer, .discardRecording])
         XCTAssertEqual(machine.state, .idle)
     }
 

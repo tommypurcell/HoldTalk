@@ -5,6 +5,8 @@ public enum PillContent: Equatable {
     case holding
     case handsFree(secondsLeft: Int, elapsed: Int)
     case transcribing
+    /// Esc was pressed: the mic is off and the undo can still be taken.
+    case cancelled(hint: String)
     case message(String, isError: Bool)
 }
 
@@ -45,6 +47,9 @@ public final class PillView: NSView {
                          showsMeter: true)
         case .transcribing:
             return Parts(dot: Self.blue, title: "Transcribing", detail: "esc", showsMeter: false)
+        case let .cancelled(hint):
+            // Amber and still: no pulsing, no meter, the mic is off.
+            return Parts(dot: Self.amber, title: "Cancelled", detail: hint, showsMeter: false)
         case let .message(text, isError):
             return Parts(dot: isError ? Self.amber : Self.blue, title: text, detail: nil, showsMeter: false)
         }
@@ -215,7 +220,7 @@ public final class PillWindow {
                     self.view.pulse = CGFloat(0.5 + 0.5 * cos(self.pulseClock * 2 * .pi / 1.4))
                 }
             }
-        case .message:
+        case .message, .cancelled:
             break
         }
     }

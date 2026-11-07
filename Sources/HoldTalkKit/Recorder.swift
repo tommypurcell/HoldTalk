@@ -5,6 +5,10 @@ public protocol AudioRecording: AnyObject {
     var onLevel: ((Float) -> Void)? { get set }
     var onFailure: ((String) -> Void)? { get set }
     func start()
+    /// Stops capturing but keeps what was recorded, for the undo window after Esc.
+    func pause()
+    /// Continues the same recording after a pause.
+    func resume()
     func finish() async -> SpeechAudio
     func discard()
 }
@@ -35,6 +39,29 @@ public final class Recorder: AudioRecording {
                 DispatchQueue.main.async { [onFailure] in onFailure?("Microphone access is off") }
                 return
             }
+            do {
+                try startEngine()
+            } catch {
+                stopEngine()
+                DispatchQueue.main.async { [onFailure] in onFailure?(error.localizedDescription) }
+            }
+        }
+    }
+
+    /// Stops capturing but keeps the samples already recorded, so Esc can be
+    /// undone. The mic is fully released while paused: nothing is captured.
+    public func pause() {
+        queue.async { [self] in
+            if let resampler { samples.append(contentsOf: resampler.flush()) }
+            stopEngine()
+        }
+    }
+
+    /// Carries on with the same recording after a pause. Whatever was said
+    /// before Esc is still in the buffer, and the resampler starts fresh.
+    public func resume() {
+        queue.async { [self] in
+            guard engine == nil else { return }
             do {
                 try startEngine()
             } catch {
