@@ -32,6 +32,8 @@ public struct WhisperCppTranscriber: Transcriber {
         process.executableURL = executable
         process.arguments = ["-m", model.path, "-f", wav.path, "-l", language,
                              "-nt", "-np", "-otxt", "-of", outputBase]
+        // Without this, whisper-cli can wait up to about half a second to exit after writing the text.
+        process.environment = ProcessInfo.processInfo.environment.merging(["GGML_METAL_NO_RESIDENCY": "1"]) { _, new in new }
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
 

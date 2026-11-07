@@ -41,7 +41,8 @@ menu. If the file has a mistake, the menu shows the error and the running settin
 | `transcriber` | `"local"` | `local`, `groq`, `openai` |
 | `transcriberModel` | Provider's default | Groq: `whisper-large-v3-turbo`. OpenAI: `gpt-transcribe`. |
 | `localModel` | `"small"` | `small`, `medium`, or a full path to a ggml model |
-| `whisperPath` | Found automatically | Full path to `whisper-cli` |
+| `whisperServer` | `true` | `true` keeps the local model loaded with `whisper-server` while you dictate, for faster text. It uses extra memory, about 860 MB with `small` on Apple silicon, and stops after 5 idle minutes. `false` starts `whisper-cli` each time. |
+| `whisperPath` | Found automatically | Full path to `whisper-cli`. `whisper-server` must be in the same folder. |
 | `language` | `"auto"` | `auto` or a code such as `en`. Setting it improves accuracy on very short clips. |
 | `cleanupEnabled` | `true` | `false` pastes the raw transcript |
 | `cleanupProvider` | `"auto"` | `auto` (first key found: Groq, Anthropic, OpenAI), `groq`, `anthropic`, `openai` |
@@ -66,6 +67,7 @@ Put keys in `~/.config/holdtalk/.env`, using the names in `.env.example`, then c
 | `groq` or `openai` | **Sent to that provider** | **Sent to the LLM provider** |
 
 - A cloud transcriber falls back to local if it fails. Local never falls back to the cloud.
+- `whisper-server` only listens on `127.0.0.1`, on a random port, and stops when HoldTalk quits. It has no password, so other programs running on your Mac could send it audio while it's running. Set `whisperServer` to `false` if that matters to you.
 - Offline, cleanup fails and you get the raw transcript, including filler words.
 - Audio is held in memory, then written to a private temp file only while being transcribed, and deleted afterwards.
 - Transcripts aren't logged or saved. Web requests use an ephemeral session with no cache.
