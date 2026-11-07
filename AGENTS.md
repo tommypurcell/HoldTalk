@@ -17,20 +17,23 @@ Whisper needs `brew install whisper-cpp` and `scripts/download-model.sh small`.
 
 ## Where things are
 
-Everything is in `Sources/HoldTalkKit/`, except the small entry point in `Sources/HoldTalk/main.swift`.
+The app's code is in `Sources/HoldTalkKit/`, grouped by what it does. `Sources/HoldTalk/main.swift` is only the entry point.
 
-| File | What it does |
-| --- | --- |
-| `DictationMachine.swift` | The rules for hold, double-tap and Esc, as a pure state machine with no audio or UI |
-| `DictationController.swift` | Connects the keyboard, mic, transcription, pill and paste |
-| `HotkeyMonitor.swift`, `Hotkey.swift` | Watches the hotkey and Esc, and parses hotkey settings |
-| `Recorder.swift`, `Audio.swift` | Records the mic and converts it to 16 kHz mono |
-| `Transcription.swift` | Runs `whisper-cli` or calls the Groq or OpenAI API |
-| `WhisperServer.swift` | Keeps `whisper-server` running while you dictate, and falls back to `whisper-cli` |
-| `Cleanup.swift`, `Pipeline.swift` | LLM cleanup, and the choice of providers |
-| `TextInserter.swift`, `Clipboard.swift` | Pastes with Cmd-V and handles the clipboard |
-| `Pill.swift`, `MenuBarApp.swift` | The floating pill and the menu bar |
-| `Config.swift` | Reads `config.json` and `.env` |
+| Folder | Files | What they do |
+| --- | --- | --- |
+| `Dictation/` | `DictationMachine.swift` | The rules for hold, double-tap and Esc, as a pure state machine with no audio or UI |
+| | `DictationController.swift` | Connects the keyboard, mic, transcription, pill and paste |
+| `Hotkey/` | `HotkeyMonitor.swift`, `Hotkey.swift` | Watches the hotkey and Esc, and parses hotkey settings |
+| `Audio/` | `Recorder.swift`, `Audio.swift` | Records the mic and converts it to 16 kHz mono |
+| `Transcription/` | `Pipeline.swift` | Runs transcription and cleanup, and chooses the providers |
+| | `Transcription.swift` | Runs `whisper-cli` or calls the Groq or OpenAI API |
+| | `WhisperServer.swift` | Keeps `whisper-server` running while you dictate, and falls back to `whisper-cli` |
+| | `Cleanup.swift` | LLM cleanup |
+| `Paste/` | `TextInserter.swift`, `Clipboard.swift` | Pastes with Cmd-V and handles the clipboard |
+| `Interface/` | `MenuBarApp.swift`, `Pill.swift` | The menu bar and the floating pill |
+| `Settings/` | `Config.swift` | Reads `config.json` and `.env` |
+
+Tests are in `Tests/HoldTalkKitTests/`, the app bundle's settings are in `Resources/`, build scripts are in `scripts/`, and user docs are in `docs/`.
 
 ## Rules
 
