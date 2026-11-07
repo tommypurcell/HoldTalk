@@ -90,7 +90,8 @@ public struct DictationPipeline {
             let local = WhisperCppTranscriber(executable: executable, model: config.modelURL, language: config.language)
             if let whisperServer {
                 transcribers.append(WhisperServerTranscriber(server: whisperServer, language: config.language,
-                                                             session: session, fallback: local))
+                                                             session: session, fallback: local,
+                                                             tailoredWindow: config.tailoredWindow))
             } else {
                 transcribers.append(local)
             }

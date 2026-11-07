@@ -123,4 +123,53 @@ final class WhisperServerTests: XCTestCase {
         XCTAssertFalse(try Config.parse(Data(#"{"whisperServer": false}"#.utf8)).whisperServer)
         XCTAssertThrowsError(try Config.parse(Data(#"{"whisperServer": "yes"}"#.utf8)))
     }
+
+    // MARK: - The tailored window
+
+    private func audioBytes(seconds: Double) -> Int {
+        44 + Int(seconds * 16_000) * 2
+    }
+
+    func testWindowCoversTheClipPlusTwoSeconds() {
+        XCTAssertEqual(WhisperServerTranscriber.audioWindow(audioBytes: audioBytes(seconds: 3)), 250)
+        XCTAssertEqual(WhisperServerTranscriber.audioWindow(audioBytes: audioBytes(seconds: 0)), 100)
+        XCTAssertEqual(WhisperServerTranscriber.audioWindow(audioBytes: audioBytes(seconds: 27)), 1450)
+    }
+
+    func testLongClipsUseTheFullWindow() {
+        XCTAssertNil(WhisperServerTranscriber.audioWindow(audioBytes: audioBytes(seconds: 28)))
+        XCTAssertNil(WhisperServerTranscriber.audioWindow(audioBytes: audioBytes(seconds: 300)))
+    }
+
+    private func requestText(tailored: Bool, seconds: Double) throws -> String {
+        let server = WhisperServer(executable: try program("whisper-server"), model: try model())
+        let transcriber = WhisperServerTranscriber(server: server, language: "auto", session: .holdTalk,
+                                                   fallback: FixedText(), tailoredWindow: tailored)
+        let audio = Data(count: audioBytes(seconds: seconds))
+        return String(decoding: transcriber.requestBody(audio: audio, boundary: "b"), as: UTF8.self)
+    }
+
+    func testRequestSendsTheWindowOnlyWhenTurnedOn() throws {
+        XCTAssertTrue(try requestText(tailored: true, seconds: 3).contains("name=\"audio_ctx\"\r\n\r\n250\r\n"))
+        XCTAssertFalse(try requestText(tailored: false, seconds: 3).contains("audio_ctx"))
+        XCTAssertFalse(try requestText(tailored: true, seconds: 60).contains("audio_ctx"))
+    }
+
+    func testPipelinePassesTheSettingToTheServer() throws {
+        var settings = try config()
+        settings.tailoredWindow = true
+        let server = WhisperServer(executable: try program("whisper-server"), model: try model())
+        let pipeline = DictationPipeline.make(config: settings, env: EnvFile(), whisperServer: server)
+        XCTAssertEqual((pipeline.transcribers.first as? WhisperServerTranscriber)?.tailoredWindow, true)
+    }
+
+    func testTailoredWindowIsOffByDefault() throws {
+        XCTAssertFalse(try Config.parse(Data("{}".utf8)).tailoredWindow)
+        XCTAssertTrue(try Config.parse(Data(#"{"tailoredWindow": true}"#.utf8)).tailoredWindow)
+    }
+}
+
+private struct FixedText: Transcriber {
+    let name = "fixed"
+    func transcribe(wav: URL) async throws -> String { "" }
 }
