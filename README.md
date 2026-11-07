@@ -2,8 +2,8 @@
 
 # HoldTalk
 
-Free, open-source dictation for your Mac. Hold a key, speak, let go, and the text appears at your cursor.
-It runs locally with whisper.cpp, with no accounts and no telemetry.
+Free, open-source dictation for your Mac. Hold a key, speak, and let go. The text appears at your cursor.
+HoldTalk runs locally on whisper.cpp. It requires no account and sends no telemetry.
 
 | Do this | What happens |
 | --- | --- |
@@ -13,7 +13,7 @@ It runs locally with whisper.cpp, with no accounts and no telemetry.
 
 ## Install
 
-Needs macOS 13 or later.
+HoldTalk requires macOS 13 or later.
 
 ```bash
 git clone https://github.com/tommypurcell/HoldTalk.git
@@ -26,19 +26,19 @@ open ~/Applications/HoldTalk.app
 
 Then:
 
-1. In **System Settings → Privacy & Security**, allow HoldTalk under **Microphone**, **Input Monitoring** and **Accessibility**.
-2. In **System Settings → Keyboard**, set **Press 🌐 key to** **Do Nothing**.
+1. Allow HoldTalk under **Microphone**, **Input Monitoring** and **Accessibility** in **System Settings → Privacy & Security**.
+2. Set **Press 🌐 key to** **Do Nothing** in **System Settings → Keyboard**.
 
 ## Optional: clean up the text
 
-Add a Groq, Anthropic or OpenAI key to remove filler words and fix punctuation. Without one, you get the raw transcript.
+Add a Groq, Anthropic or OpenAI key to remove filler words and fix punctuation. Without a key, you get the raw transcript. Gemini support is [coming soon](https://github.com/tommypurcell/HoldTalk/issues/6).
 
 ```bash
 cp .env.example ~/.config/holdtalk/.env
 chmod 600 ~/.config/holdtalk/.env
 ```
 
-With a key, your text is sent to that provider. Your audio stays on your Mac unless you choose a cloud transcriber.
+With a key, HoldTalk sends your text to that provider. Your audio stays on your Mac unless you choose a cloud transcriber.
 
 ## More
 
