@@ -1,6 +1,10 @@
 import AppKit
 import HoldTalkKit
 
+if CommandLine.arguments.contains("--self-test") {
+    SelfTest.runFromCommandLine(CommandLine.arguments)
+}
+
 MainActor.assumeIsolated {
     let app = NSApplication.shared
     let delegate = MenuBarApp()

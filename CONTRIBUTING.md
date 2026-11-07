@@ -15,7 +15,7 @@ scripts/build-app.sh     # Builds build/HoldTalk.app without installing
 
 1. Fork the repo and create a branch.
 2. Make one focused change, and include unit tests for it.
-3. Run `swift test`.
+3. Run `scripts/agent-test.sh`, which runs the unit tests and the real app on test speech.
 4. Open a pull request saying what changed, and what you tried in the real app.
 
 `main` is protected, so all outside changes go through a pull request and need the maintainer's approval.
