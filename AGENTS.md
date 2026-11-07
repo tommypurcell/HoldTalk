@@ -15,6 +15,36 @@ scripts/build-app.sh --install   # Also copies it to ~/Applications
 
 Whisper needs `brew install whisper-cpp` and `scripts/download-model.sh small`.
 
+## Test the app
+
+Run this before opening a pull request, and include the result:
+
+```bash
+scripts/agent-test.sh                # Unit tests, a build, then the real app on test speech
+scripts/agent-test.sh --skip-tests   # Skips the unit tests when you only need the app run
+```
+
+It exits with `0` if it passed, `1` if it failed, or `2` for a setup problem. The report is `build/agent-test-report.json`.
+
+It's safe to run on someone's Mac. It doesn't install anything, record the mic, press keys, paste, or read `.env`.
+
+| Report field | What it means |
+| --- | --- |
+| `passed` | `true` if every run transcribed the test speech, and `whisper-server` didn't fail |
+| `failures` | What went wrong. Fix these. |
+| `warnings` | Things it couldn't test, such as a permission that isn't granted. Mention these in the pull request. |
+| `permissions` | The real app's Microphone, Input Monitoring and Accessibility status. Only a person can grant these. |
+| `runs` | Each transcription: `name`, `seconds`, `matchedWords`, `usedFallback` and `text` |
+
+**Don't use the timings as pass or fail.** They change with the Mac and whatever else is running.
+
+**Ask a person to check these**, because tests must never post real key events:
+
+1. Hold `fn`, speak and let go. The text should paste into another app.
+2. Double-tap `fn`, speak, then tap once more. The text should paste.
+3. Press Esc while recording, and while transcribing. Nothing should paste.
+4. Quit HoldTalk, and confirm that `pgrep -x whisper-server` finds nothing.
+
 ## Where things are
 
 The app's code is in `Sources/HoldTalkKit/`, grouped by what it does. `Sources/HoldTalk/main.swift` is only the entry point.
@@ -32,6 +62,7 @@ The app's code is in `Sources/HoldTalkKit/`, grouped by what it does. `Sources/H
 | `Paste/` | `TextInserter.swift`, `Clipboard.swift` | Pastes with Cmd-V and handles the clipboard |
 | `Interface/` | `MenuBarApp.swift`, `Pill.swift` | The menu bar and the floating pill |
 | `Settings/` | `Config.swift` | Reads `config.json` and `.env` |
+| `Diagnostics/` | `SelfTest.swift` | Runs the real app on test speech for `scripts/agent-test.sh` |
 
 Tests are in `Tests/HoldTalkKitTests/`, the app bundle's settings are in `Resources/`, build scripts are in `scripts/`, and user docs are in `docs/`.
 
@@ -71,5 +102,5 @@ Tests are in `Tests/HoldTalkKitTests/`, the app bundle's settings are in `Resour
 
 1. Work on a branch. `main` is protected, and only the maintainer merges.
 2. Keep each change focused, and include unit tests for it.
-3. Run `swift test` and report the result.
+3. Run `scripts/agent-test.sh` and report the result.
 4. Say what you ran in the real app and what you didn't. The live hotkey, paste and permission flows can't be covered by `swift test`, so ask a person to try them.
