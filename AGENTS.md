@@ -47,7 +47,8 @@ cargo run -p holdtalk         # On a Mac the hotkey and paste do nothing
 is copied from `Cleanup.swift`, and a test fails if the two drift apart. The installer is built by
 `.github/workflows/windows.yml`. The rules below apply to both apps.
 
-**Installing it on a Windows PC for someone:** follow [windows/INSTALL.md](windows/INSTALL.md).
+**Installing or removing it on a Windows PC for someone:** follow [windows/INSTALL.md](windows/INSTALL.md) or
+[windows/UNINSTALL.md](windows/UNINSTALL.md).
 
 ## Rules
 

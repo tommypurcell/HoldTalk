@@ -21,6 +21,11 @@ hands-free, Esc to cancel (press the hotkey within 5 seconds to undo), and a
 If nothing records, turn on **Settings > Privacy & security > Microphone > Let
 desktop apps access your microphone**.
 
+## Uninstall
+
+Tray menu > **Quit HoldTalk**, then **Settings > Apps > Installed apps > HoldTalk > Uninstall**.
+To also remove settings and the speech model, see [UNINSTALL.md](UNINSTALL.md).
+
 ## Settings
 
 The tray menu has **Open Settings File**, which opens
