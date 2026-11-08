@@ -124,7 +124,8 @@ mod tests {
     #[test]
     fn prompt_matches_the_mac_app() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../Sources/HoldTalkKit/Cleanup.swift");
-        let swift = std::fs::read_to_string(path).expect("Cleanup.swift is in the same repo");
+        // Git may check the file out with Windows line endings.
+        let swift = std::fs::read_to_string(path).expect("Cleanup.swift is in the same repo").replace("\r\n", "\n");
         let start = swift.find("return \"\"\"\n").expect("prompt start") + "return \"\"\"\n".len();
         let end = start + swift[start..].find("\"\"\"").expect("prompt end");
         let template: String = swift[start..end]
