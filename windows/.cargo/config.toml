@@ -1,0 +1,4 @@
+# Builds the C runtime into HoldTalk.exe, so it starts on PCs without the
+# Visual C++ runtime installed.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

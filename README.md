@@ -50,6 +50,10 @@ Then:
 1. Allow HoldTalk under **Microphone**, **Input Monitoring** and **Accessibility** in **System Settings → Privacy & Security**.
 2. Set **Press 🌐 key to** **Do Nothing** in **System Settings → Keyboard**.
 
+### Windows (early test build)
+
+Download the installer from [Releases](https://github.com/tommypurcell/HoldTalk/releases) and hold **Right Ctrl** to talk. See [windows/README.md](windows/README.md).
+
 ## Optional: clean up the text
 
 Add a Groq, Anthropic or OpenAI key to remove filler words and fix punctuation. Without a key, you get the raw transcript. Gemini support is [coming soon](https://github.com/tommypurcell/HoldTalk/issues/6).

@@ -1,0 +1,22 @@
+[package]
+name = "holdtalk-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "HoldTalk's dictation rules, settings, transcription and cleanup, with no Windows UI in it"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+regex = "1"
+sha2 = "0.10"
+# Native TLS uses Windows' own SChannel, so no C compiler is needed to build.
+ureq = { version = "2.12", default-features = false, features = ["native-tls"] }
+native-tls = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_System_JobObjects",
+    "Win32_System_Threading",
+] }

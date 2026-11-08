@@ -1,7 +1,7 @@
 # Agent guide
 
-HoldTalk is a macOS menu bar dictation app written in Swift. Hold or double-tap a hotkey, speak, and the text is
-pasted at the cursor. Follow this guide when changing the code. To install or use the app, see
+HoldTalk is a dictation app: a macOS menu bar app written in Swift, plus a Windows version in `windows/`. Hold or
+double-tap a hotkey, speak, and the text is pasted at the cursor. Follow this guide when changing the code. To install or use the app, see
 [README.md](README.md) and [docs/guide.md](docs/guide.md).
 
 ## Commands
@@ -30,6 +30,39 @@ Everything is in `Sources/HoldTalkKit/`, except the small entry point in `Source
 | `TextInserter.swift`, `Clipboard.swift` | Pastes with Cmd-V and handles the clipboard |
 | `Pill.swift`, `MenuBarApp.swift` | The floating pill and the menu bar |
 | `Config.swift` | Reads `config.json` and `.env` |
+
+## Windows
+
+The Windows app is in `windows/` and is written in Rust with Tauri. `windows/core/` has the dictation rules,
+settings, transcription and cleanup, and builds and tests on any OS. `windows/app/` has the tray, pill, mic,
+keyboard hook and paste. See [windows/README.md](windows/README.md).
+
+```bash
+cd windows
+cargo test -p holdtalk-core   # Works on a Mac too
+cargo run -p holdtalk         # On a Mac the hotkey and paste do nothing
+```
+
+`windows/core/src/machine.rs` is a port of `DictationMachine.swift`, so change both together. The cleanup prompt
+is copied from `Cleanup.swift`, and a test fails if the two drift apart. The installer is built by
+`.github/workflows/windows.yml`. The rules below apply to both apps.
+
+**Installing it on a Windows PC for someone**
+
+1. Download the installer from the newest release, which may be a pre-release:
+   `gh release download --repo tommypurcell/HoldTalk --pattern "*-setup.exe"`, or download
+   `HoldTalk_*_x64-setup.exe` from https://github.com/tommypurcell/HoldTalk/releases.
+2. Run it. It installs for the current user with no administrator access. SmartScreen warns because the
+   build isn't signed yet, so the person has to click **More info** and then **Run anyway**.
+3. HoldTalk starts in the tray and downloads the speech model (about 500 MB) to
+   `%APPDATA%\HoldTalk\models`. The pill says when it's ready.
+4. If recording fails, have the person turn on **Settings > Privacy & security > Microphone > Let desktop apps
+   access your microphone**.
+5. Ask the person to hold Right Ctrl, say a sentence and let go in Notepad. You can't test this yourself:
+   keys you send are ignored by the hook, and a real voice is needed.
+6. Settings are in `%APPDATA%\HoldTalk\config.json`, and API keys for cleanup are in
+   `%APPDATA%\HoldTalk\.env`. After a change, choose **Reload Settings** in the tray menu. Never read, print
+   or commit the `.env`.
 
 ## Rules
 
