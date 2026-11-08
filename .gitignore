@@ -3,3 +3,10 @@ build/
 .env
 *.bin
 .DS_Store
+
+# Windows app
+windows/target/
+windows/app/gen/
+windows/app/whisper/*
+!windows/app/whisper/README.md
+windows/target-win/

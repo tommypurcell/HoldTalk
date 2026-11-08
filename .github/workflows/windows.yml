@@ -1,0 +1,74 @@
+name: Windows
+
+# Tests the Windows app's core on Mac and Windows, and builds the installer.
+on:
+  push:
+    paths: ["windows/**", "Sources/HoldTalkKit/Cleanup.swift", ".github/workflows/windows.yml"]
+  pull_request:
+    paths: ["windows/**", "Sources/HoldTalkKit/Cleanup.swift", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+
+env:
+  # Pinned whisper.cpp build, checked by hash before it goes in the installer.
+  WHISPER_TAG: b5454
+  WHISPER_SHA256: 6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: windows
+      - run: cargo test -p holdtalk-core
+
+  installer:
+    needs: test
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: windows
+
+      - name: Add whisper.cpp
+        shell: pwsh
+        run: |
+          $zip = "$env:RUNNER_TEMP\whisper.zip"
+          gh release download $env:WHISPER_TAG -R ggml-org/whisper.cpp -p whisper-bin-x64.zip -O $zip
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne $env:WHISPER_SHA256) { throw "whisper.cpp download doesn't match: $hash" }
+          Expand-Archive $zip "$env:RUNNER_TEMP\whisper"
+          $from = "$env:RUNNER_TEMP\whisper\Release"
+          Copy-Item "$from\whisper-server.exe", "$from\whisper-cli.exe", "$from\whisper.dll", "$from\ggml*.dll" app\whisper\
+          # whisper.cpp needs the Visual C++ runtime, which some PCs lack, so it ships beside it.
+          foreach ($dll in "vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll") {
+            Copy-Item "C:\Windows\System32\$dll" app\whisper\
+          }
+          Get-ChildItem app\whisper
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Build installer
+        run: |
+          cargo install tauri-cli --version "^2" --locked
+          cd app
+          cargo tauri build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HoldTalk-Windows-installer
+          path: windows/target/release/bundle/nsis/*.exe
+          if-no-files-found: error

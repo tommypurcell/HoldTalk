@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>HoldTalk</title>
+<style>
+  /* The pill from the Mac app: dark, lit from above, with a small shadow. */
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; cursor: default; }
+  body { display: flex; align-items: flex-end; justify-content: center; font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+  #pill {
+    display: none; align-items: center; gap: 8px; height: 36px; padding: 0 16px; margin-bottom: 10px;
+    max-width: 480px; border-radius: 18px; background: #1c1c21; color: #f7f7f7;
+    box-shadow: inset 0 1px 0 #45454f, 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+  #pill.shown { display: flex; }
+  #dot { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+  #title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #detail { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; color: rgba(247, 247, 247, 0.6); white-space: nowrap; }
+  #meter { display: flex; align-items: center; gap: 4px; height: 16px; margin-left: 2px; }
+  #meter span { width: 3px; border-radius: 1.5px; background: rgba(247, 247, 247, 0.85); }
+</style>
+</head>
+<body>
+<div id="pill"><div id="dot"></div><div id="title"></div><div id="detail"></div><div id="meter"></div></div>
+<script>
+  const colors = { red: "#ff453a", amber: "#ffb833", blue: "#6badff" };
+  const pill = document.getElementById("pill");
+  const dot = document.getElementById("dot");
+  const title = document.getElementById("title");
+  const detail = document.getElementById("detail");
+  const meter = document.getElementById("meter");
+  const scales = [0.55, 0.85, 1, 0.75, 0.5];
+  for (const _ of scales) meter.appendChild(document.createElement("span"));
+  let pulsing = false;
+  let clock = 0;
+
+  function level(value) {
+    const loudness = Math.min(1, Math.sqrt(Math.max(0, value)) * 1.5);
+    meter.querySelectorAll("span").forEach((bar, i) => { bar.style.height = (3 + 13 * loudness * scales[i]) + "px"; });
+  }
+
+  // Called from Rust with { dot, title, detail, meter, pulse }.
+  window.holdtalk = {
+    show(parts) {
+      dot.style.background = colors[parts.dot] || colors.blue;
+      title.textContent = parts.title;
+      detail.textContent = parts.detail || "";
+      detail.style.display = parts.detail ? "" : "none";
+      meter.style.display = parts.meter ? "flex" : "none";
+      pulsing = parts.pulse;
+      if (!pulsing) dot.style.opacity = 1;
+      pill.classList.add("shown");
+    },
+    level,
+    hide() { pill.classList.remove("shown"); pulsing = false; },
+  };
+  level(0);
+  setInterval(() => {
+    if (!pulsing) return;
+    clock += 1 / 20;
+    dot.style.opacity = 0.45 + 0.55 * (0.5 + 0.5 * Math.cos(clock * 2 * Math.PI / 1.4));
+  }, 50);
+</script>
+</body>
+</html>

@@ -23,7 +23,7 @@
 
 # HoldTalk
 
-Free, open-source dictation for your Mac. Hold a key, speak, and let go. The text appears at your cursor.
+Free, open-source dictation for Mac and Windows. Hold a key, speak, and let go. The text appears at your cursor.
 HoldTalk runs locally on whisper.cpp. It requires no account and sends no telemetry.
 
 | Do this | What happens |
@@ -33,6 +33,8 @@ HoldTalk runs locally on whisper.cpp. It requires no account and sends no teleme
 | Press Esc | Cancels. Press `fn` within 5 seconds to undo. |
 
 ## Install
+
+### Mac
 
 HoldTalk requires macOS 13 or later.
 
@@ -49,6 +51,18 @@ Then:
 
 1. Allow HoldTalk under **Microphone**, **Input Monitoring** and **Accessibility** in **System Settings → Privacy & Security**.
 2. Set **Press 🌐 key to** **Do Nothing** in **System Settings → Keyboard**.
+
+### Windows (early test build)
+
+HoldTalk for Windows works the same way, with **Right Ctrl** instead of `fn`. It requires Windows 10 or 11.
+
+1. Download `HoldTalk_*_x64-setup.exe` from the newest [release](https://github.com/tommypurcell/HoldTalk/releases).
+2. Run it. If Windows says it protected your PC, click **More info**, then **Run anyway**. The build isn't signed yet.
+3. HoldTalk starts in the tray, beside the clock, and downloads its speech model (about 500 MB) the first time.
+4. When the pill at the bottom of the screen says it's ready, hold **Right Ctrl**, speak, and let go.
+
+If nothing records, turn on **Settings → Privacy & security → Microphone → Let desktop apps access your microphone**.
+More in [windows/README.md](windows/README.md). Agents can follow [windows/INSTALL.md](windows/INSTALL.md).
 
 ## Optional: clean up the text
 
