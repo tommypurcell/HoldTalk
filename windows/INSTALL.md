@@ -10,10 +10,14 @@ dictation app: hold Right Ctrl, speak, let go, and the text is typed at the curs
    `gh release download --repo tommypurcell/HoldTalk --pattern "*-setup.exe"`.
    In PowerShell without it:
    ```powershell
-   $release = Invoke-RestMethod https://api.github.com/repos/tommypurcell/HoldTalk/releases | Select-Object -First 1
-   $asset = $release.assets | Where-Object name -like "*-setup.exe" | Select-Object -First 1
+   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+   $releases = Invoke-RestMethod https://api.github.com/repos/tommypurcell/HoldTalk/releases
+   $asset = $releases.assets | Where-Object name -like "*-setup.exe" | Select-Object -First 1
+   if (-not $asset) { throw "No Windows installer has been released yet." }
    Invoke-WebRequest $asset.browser_download_url -OutFile "$env:USERPROFILE\Downloads\$($asset.name)"
    ```
+   Releases are listed newest first, pre-releases included. Only download from
+   `github.com/tommypurcell/HoldTalk`.
 2. **Run it.** Ask the person to double-click it. It installs for the current user
    only and needs no administrator access. The build isn't code-signed yet, so
    Windows SmartScreen warns: they click **More info**, then **Run anyway**.
