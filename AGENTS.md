@@ -47,22 +47,7 @@ cargo run -p holdtalk         # On a Mac the hotkey and paste do nothing
 is copied from `Cleanup.swift`, and a test fails if the two drift apart. The installer is built by
 `.github/workflows/windows.yml`. The rules below apply to both apps.
 
-**Installing it on a Windows PC for someone**
-
-1. Download the installer from the newest release, which may be a pre-release:
-   `gh release download --repo tommypurcell/HoldTalk --pattern "*-setup.exe"`, or download
-   `HoldTalk_*_x64-setup.exe` from https://github.com/tommypurcell/HoldTalk/releases.
-2. Run it. It installs for the current user with no administrator access. SmartScreen warns because the
-   build isn't signed yet, so the person has to click **More info** and then **Run anyway**.
-3. HoldTalk starts in the tray and downloads the speech model (about 500 MB) to
-   `%APPDATA%\HoldTalk\models`. The pill says when it's ready.
-4. If recording fails, have the person turn on **Settings > Privacy & security > Microphone > Let desktop apps
-   access your microphone**.
-5. Ask the person to hold Right Ctrl, say a sentence and let go in Notepad. You can't test this yourself:
-   keys you send are ignored by the hook, and a real voice is needed.
-6. Settings are in `%APPDATA%\HoldTalk\config.json`, and API keys for cleanup are in
-   `%APPDATA%\HoldTalk\.env`. After a change, choose **Reload Settings** in the tray menu. Never read, print
-   or commit the `.env`.
+**Installing it on a Windows PC for someone:** follow [windows/INSTALL.md](windows/INSTALL.md).
 
 ## Rules
 
