@@ -15,7 +15,9 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![macOS 13+](https://img.shields.io/badge/macOS-13%2B-black?logo=apple)
+![Windows 10+](https://img.shields.io/badge/Windows-10%2B-0078D4?logo=windows)
 ![Swift](https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white)
+![Rust](https://img.shields.io/badge/Rust-Tauri-B7410E?logo=rust&logoColor=white)
 ![Runs locally](https://img.shields.io/badge/runs-locally-brightgreen)
 ![No telemetry](https://img.shields.io/badge/telemetry-none-brightgreen)
 
@@ -62,7 +64,19 @@ HoldTalk for Windows works the same way, with **Right Ctrl** instead of `fn`. It
 4. When the pill at the bottom of the screen says it's ready, hold **Right Ctrl**, speak, and let go.
 
 If nothing records, turn on **Settings → Privacy & security → Microphone → Let desktop apps access your microphone**.
-More in [windows/README.md](windows/README.md). Agents can follow [windows/INSTALL.md](windows/INSTALL.md).
+More in [windows/README.md](windows/README.md).
+
+**Let an AI agent do it.** Paste this into an agent such as Claude Code on the Windows PC:
+
+```text
+Fetch https://raw.githubusercontent.com/tommypurcell/HoldTalk/main/windows/INSTALL.md and follow it to install HoldTalk on this PC.
+```
+
+To remove it later:
+
+```text
+Fetch https://raw.githubusercontent.com/tommypurcell/HoldTalk/main/windows/UNINSTALL.md and follow it to uninstall HoldTalk from this PC.
+```
 
 ## Optional: clean up the text
 

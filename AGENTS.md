@@ -1,8 +1,16 @@
 # Agent guide
 
 HoldTalk is a dictation app: a macOS menu bar app written in Swift, plus a Windows version in `windows/`. Hold or
-double-tap a hotkey, speak, and the text is pasted at the cursor. Follow this guide when changing the code. To install or use the app, see
-[README.md](README.md) and [docs/guide.md](docs/guide.md).
+double-tap a hotkey, speak, and the text is pasted at the cursor. Follow this guide when changing the code.
+
+## Installing it for someone
+
+| On | Follow |
+| --- | --- |
+| Windows | [windows/INSTALL.md](windows/INSTALL.md) to install, [windows/UNINSTALL.md](windows/UNINSTALL.md) to remove |
+| Mac | The **Install** section of [README.md](README.md) |
+
+How to use it is in [docs/guide.md](docs/guide.md).
 
 ## Commands
 
@@ -46,8 +54,6 @@ cargo run -p holdtalk         # On a Mac the hotkey and paste do nothing
 `windows/core/src/machine.rs` is a port of `DictationMachine.swift`, so change both together. The cleanup prompt
 is copied from `Cleanup.swift`, and a test fails if the two drift apart. The installer is built by
 `.github/workflows/windows.yml`. The rules below apply to both apps.
-
-**Installing it on a Windows PC for someone:** follow [windows/INSTALL.md](windows/INSTALL.md).
 
 ## Rules
 
