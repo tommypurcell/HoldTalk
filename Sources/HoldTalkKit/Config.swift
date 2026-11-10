@@ -25,6 +25,9 @@ public struct Config: Codable, Equatable {
     /// false leaves the transcript on the clipboard. true puts your old clipboard back.
     public var restoreClipboard = false
 
+    /// Uses the Mac's voice processing to cut background noise before transcription.
+    public var noiseSuppression = true
+
     /// Recording stops and transcribes at this limit, so nothing records all afternoon.
     public var maxRecordingSeconds: Double = 300
     public var tapMaxMilliseconds: Double = 250
@@ -35,7 +38,8 @@ public struct Config: Codable, Equatable {
     private enum CodingKeys: String, CodingKey, CaseIterable {
         case hotkey, transcriber, localModel, whisperPath, language, transcriberModel
         case cleanupEnabled, cleanupProvider, cleanupModel, casing, cleanupTimeoutSeconds
-        case restoreClipboard, maxRecordingSeconds, tapMaxMilliseconds, doubleTapWindowMilliseconds
+        case restoreClipboard, noiseSuppression
+        case maxRecordingSeconds, tapMaxMilliseconds, doubleTapWindowMilliseconds
     }
 
     public struct Invalid: LocalizedError {
@@ -61,6 +65,7 @@ public struct Config: Codable, Equatable {
         casing = try read(.casing, defaults.casing)
         cleanupTimeoutSeconds = try read(.cleanupTimeoutSeconds, defaults.cleanupTimeoutSeconds)
         restoreClipboard = try read(.restoreClipboard, defaults.restoreClipboard)
+        noiseSuppression = try read(.noiseSuppression, defaults.noiseSuppression)
         maxRecordingSeconds = try read(.maxRecordingSeconds, defaults.maxRecordingSeconds)
         tapMaxMilliseconds = try read(.tapMaxMilliseconds, defaults.tapMaxMilliseconds)
         doubleTapWindowMilliseconds = try read(.doubleTapWindowMilliseconds, defaults.doubleTapWindowMilliseconds)

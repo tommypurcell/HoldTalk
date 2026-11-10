@@ -44,19 +44,36 @@ public struct SpeechAudio {
 public final class SpeechResampler {
     private let converter: AVAudioConverter
     private let outputFormat: AVAudioFormat
+    /// Set when only the first channel is converted. See `init`.
+    private let firstChannelFormat: AVAudioFormat?
 
-    public init?(inputFormat: AVAudioFormat) {
+    /// With voice processing on, the Mac delivers the same cleaned-up voice on
+    /// every channel, and downmixing those channels gives silence. Pass
+    /// `firstChannelOnly` then, to convert channel 0 alone.
+    public init?(inputFormat: AVAudioFormat, firstChannelOnly: Bool = false) {
+        var source = inputFormat
+        if firstChannelOnly, inputFormat.channelCount > 1 {
+            guard let mono = AVAudioFormat(commonFormat: .pcmFormatFloat32,
+                                           sampleRate: inputFormat.sampleRate,
+                                           channels: 1,
+                                           interleaved: false) else { return nil }
+            source = mono
+            firstChannelFormat = mono
+        } else {
+            firstChannelFormat = nil
+        }
         guard let output = AVAudioFormat(commonFormat: .pcmFormatFloat32,
                                          sampleRate: SpeechAudio.sampleRate,
                                          channels: 1,
                                          interleaved: false),
-              let converter = AVAudioConverter(from: inputFormat, to: output) else { return nil }
+              let converter = AVAudioConverter(from: source, to: output) else { return nil }
         converter.downmix = true
         self.converter = converter
         outputFormat = output
     }
 
-    public func convert(_ input: AVAudioPCMBuffer) -> [Float] {
+    public func convert(_ buffer: AVAudioPCMBuffer) -> [Float] {
+        guard let input = firstChannel(of: buffer) else { return [] }
         let ratio = outputFormat.sampleRate / input.format.sampleRate
         var supplied = false
         return run(capacity: AVAudioFrameCount(Double(input.frameLength) * ratio) + 1024) { status in
@@ -77,6 +94,16 @@ public final class SpeechResampler {
             status.pointee = .endOfStream
             return nil
         }
+    }
+
+    private func firstChannel(of buffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
+        guard let firstChannelFormat else { return buffer }
+        guard let mono = AVAudioPCMBuffer(pcmFormat: firstChannelFormat, frameCapacity: buffer.frameLength),
+              let from = buffer.floatChannelData?[0],
+              let to = mono.floatChannelData?[0] else { return nil }
+        to.update(from: from, count: Int(buffer.frameLength))
+        mono.frameLength = buffer.frameLength
+        return mono
     }
 
     private func run(capacity: AVAudioFrameCount,

@@ -20,6 +20,21 @@ final class RecorderTests: XCTestCase {
         XCTAssertLessThan(audio.duration, 1.6)
     }
 
+    func testRecordsFromRealMicrophoneWithoutNoiseSuppression() async throws {
+        try XCTSkipUnless(AVCaptureDevice.authorizationStatus(for: .audio) == .authorized,
+                          "This process has no microphone access")
+        let recorder = Recorder()
+        recorder.noiseSuppression = false
+        var failure: String?
+        recorder.onFailure = { failure = $0 }
+        recorder.start()
+        try await Task.sleep(nanoseconds: 1_500_000_000)
+        let audio = await recorder.finish()
+        XCTAssertNil(failure)
+        XCTAssertGreaterThan(audio.duration, 0.5)
+        XCTAssertLessThan(audio.duration, 1.6)
+    }
+
     func testDiscardThenFinishReturnsNothing() async {
         let recorder = Recorder()
         recorder.discard()

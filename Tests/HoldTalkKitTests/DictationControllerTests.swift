@@ -4,6 +4,7 @@ import XCTest
 private final class FakeRecorder: AudioRecording {
     var onLevel: ((Float) -> Void)?
     var onFailure: ((String) -> Void)?
+    var noiseSuppression = false
     var starts = 0, finishes = 0, discards = 0, pauses = 0, resumes = 0
     var audio = SpeechAudio(samples: Array(repeating: 0.2, count: 16_000))
     func start() { starts += 1 }

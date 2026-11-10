@@ -48,6 +48,23 @@ final class AudioTests: XCTestCase {
         XCTAssertEqual(Double(crossings), 440, accuracy: 3, "Pitch per second")
         XCTAssertGreaterThan(settled.max() ?? 0, 0.3, "Downmixing mustn't lose the signal")
     }
+
+    /// Voice processing delivers 9 untagged channels. Downmixing those gives
+    /// silence, so the first channel must be converted on its own.
+    func testResamplerKeepsVoiceProcessingChannels() throws {
+        let layout = try XCTUnwrap(AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_DiscreteInOrder | 9))
+        let format = AVAudioFormat(standardFormatWithSampleRate: 48_000, channelLayout: layout)
+        let resampler = try XCTUnwrap(SpeechResampler(inputFormat: format, firstChannelOnly: true))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 48_000))
+        buffer.frameLength = 48_000
+        for frame in 0..<48_000 {
+            let value = Float(sin(2 * .pi * 440 * Double(frame) / 48_000)) * 0.5
+            for channel in 0..<9 { buffer.floatChannelData![channel][frame] = value }
+        }
+        let output = resampler.convert(buffer) + resampler.flush()
+        XCTAssertEqual(Double(output.count), 16_000, accuracy: 100)
+        XCTAssertGreaterThan(output.max() ?? 0, 0.3, "The voice must not come out silent")
+    }
 }
 
 final class ClipboardTests: XCTestCase {

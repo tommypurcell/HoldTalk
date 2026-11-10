@@ -4,6 +4,8 @@ import Foundation
 public protocol AudioRecording: AnyObject {
     var onLevel: ((Float) -> Void)? { get set }
     var onFailure: ((String) -> Void)? { get set }
+    /// Read when a recording starts, so a change applies to the next one.
+    var noiseSuppression: Bool { get set }
     func start()
     /// Stops capturing but keeps what was recorded, for the undo window after Esc.
     func pause()
@@ -21,8 +23,13 @@ public protocol AudioRecording: AnyObject {
 public final class Recorder: AudioRecording {
     public var onLevel: ((Float) -> Void)?
     public var onFailure: ((String) -> Void)?
+    public var noiseSuppression = true
 
     private let queue = DispatchQueue(label: "holdtalk.recorder")
+    /// The setting for the recording in progress, kept for resume and device changes.
+    private var suppressNoise = true
+    /// Whether the Mac accepted voice processing for the running engine.
+    private var voiceProcessing = false
     private var engine: AVAudioEngine?
     private var resampler: SpeechResampler?
     private var samples: [Float] = []
@@ -31,7 +38,9 @@ public final class Recorder: AudioRecording {
     public init() {}
 
     public func start() {
+        let suppress = noiseSuppression
         queue.async { [self] in
+            suppressNoise = suppress
             samples = []
             samples.reserveCapacity(Int(SpeechAudio.sampleRate) * 60)
             let access = AVCaptureDevice.authorizationStatus(for: .audio)
@@ -98,6 +107,7 @@ public final class Recorder: AudioRecording {
     private func startEngine() throws {
         let engine = AVAudioEngine()
         self.engine = engine
+        voiceProcessing = suppressNoise && enableVoiceProcessing(on: engine)
         try installTap(on: engine)
         configObserver = NotificationCenter.default.addObserver(
             forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil
@@ -107,11 +117,29 @@ public final class Recorder: AudioRecording {
         try engine.start()
     }
 
+    /// Apple's voice processing removes background noise and echo. If the Mac
+    /// refuses it, recording carries on without it rather than failing.
+    private func enableVoiceProcessing(on engine: AVAudioEngine) -> Bool {
+        do {
+            try engine.inputNode.setVoiceProcessingEnabled(true)
+        } catch {
+            return false
+        }
+        // Voice processing turns down other audio, such as music, while it runs.
+        if #available(macOS 14.0, *) {
+            engine.inputNode.voiceProcessingOtherAudioDuckingConfiguration =
+                AVAudioVoiceProcessingOtherAudioDuckingConfiguration(enableAdvancedDucking: false,
+                                                                     duckingLevel: .min)
+        }
+        return true
+    }
+
     private func installTap(on engine: AVAudioEngine) throws {
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
         guard format.sampleRate > 0, format.channelCount > 0,
-              let resampler = SpeechResampler(inputFormat: format) else { throw NoMicrophone() }
+              let resampler = SpeechResampler(inputFormat: format, firstChannelOnly: voiceProcessing)
+        else { throw NoMicrophone() }
         self.resampler = resampler
         input.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
             self?.queue.async {

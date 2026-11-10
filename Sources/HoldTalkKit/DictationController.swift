@@ -42,6 +42,7 @@ public final class DictationController {
         self.insert = insert
         self.makePipeline = makePipeline
         machine = Self.makeMachine(config)
+        recorder.noiseSuppression = config.noiseSuppression
         recorder.onLevel = { [weak self] level in
             MainActor.assumeIsolated { self?.pill.setLevel(level) }
         }
@@ -85,6 +86,7 @@ public final class DictationController {
         self.config = config
         self.env = env
         machine = Self.makeMachine(config)
+        recorder.noiseSuppression = config.noiseSuppression
         setEnabled(enabled)
     }
 
