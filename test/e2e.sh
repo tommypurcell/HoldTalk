@@ -7,6 +7,12 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 fake_home="$(mktemp -d)"
 failures=0
 
+# The test quits HoldTalk, so refuse to run while a copy is open, such as your own.
+if pgrep -x HoldTalk >/dev/null; then
+    echo "Quit HoldTalk before running this test."
+    exit 1
+fi
+
 cleanup() {
     pkill -x HoldTalk 2>/dev/null || true
     rm -rf "$fake_home"
