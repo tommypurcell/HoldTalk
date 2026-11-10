@@ -78,6 +78,19 @@ To remove it later:
 Fetch https://raw.githubusercontent.com/tommypurcell/HoldTalk/main/windows/UNINSTALL.md and follow it to uninstall HoldTalk from this PC.
 ```
 
+### Or use the npm command
+
+If you have Node, the `holdtalk` command does the build and start steps for you:
+
+```bash
+npx holdtalk setup     # installs whisper-cpp and the model, then starts the app
+npx holdtalk           # starts it again later
+npx holdtalk status    # shows what's installed and running
+npx holdtalk stop      # quits HoldTalk
+```
+
+It needs Xcode Command Line Tools for the first build. You still grant the permissions above.
+
 ## Optional: clean up the text
 
 Add a Groq, Anthropic or OpenAI key to remove filler words and fix punctuation. Without a key, you get the raw transcript. Gemini support is [coming soon](https://github.com/tommypurcell/HoldTalk/issues/6).
