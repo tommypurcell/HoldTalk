@@ -1,0 +1,35 @@
+{
+  "name": "holdtalk",
+  "version": "1.0.0",
+  "description": "Free, local dictation for your Mac. Hold a key, speak, and let go.",
+  "license": "MIT",
+  "author": "tommypurcell",
+  "homepage": "https://github.com/tommypurcell/HoldTalk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tommypurcell/HoldTalk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tommypurcell/HoldTalk/issues"
+  },
+  "keywords": ["dictation", "speech-to-text", "whisper", "macos", "voice"],
+  "bin": {
+    "holdtalk": "bin/holdtalk.js"
+  },
+  "files": [
+    "bin",
+    "scripts",
+    "Sources",
+    "Resources",
+    "Package.swift",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/holdtalk.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "os": ["darwin"]
+}
