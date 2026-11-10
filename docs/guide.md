@@ -49,6 +49,7 @@ menu. If the file has a mistake, the menu shows the error and the running settin
 | `casing` | `"sentence"` | `sentence`, `lowercase`, `preserve` |
 | `cleanupTimeoutSeconds` | `8` | After this, the raw transcript is pasted |
 | `restoreClipboard` | `false` | `false` leaves the transcript on the clipboard. `true` puts your previous clipboard back. |
+| `noiseSuppression` | `true` | Uses the Mac's voice processing to cut background noise. `false` records the raw mic. |
 | `maxRecordingSeconds` | `300` | Limit for both modes |
 | `tapMaxMilliseconds` | `250` | A shorter press counts as a tap |
 | `doubleTapWindowMilliseconds` | `350` | Time allowed for the second tap |
@@ -78,5 +79,8 @@ Put keys in `~/.config/holdtalk/.env`, using the names in `.env.example`, then c
 - **Chords:** with a single-key hotkey, pressing another key within 1 second cancels, so fn+arrow doesn't start dictation.
 - **While transcribing:** the hotkey is ignored until the current text is pasted, or until you press Esc.
 - **After Esc:** the recording is paused, not gone: for 5 seconds the hotkey takes the undo, with everything said so far still in it. The mic is off during that window and the pill's dot is amber and still, so it's clear nothing is being captured. The 5-minute limit keeps running across the pause, so undoing can't buy extra recording time. The audio never touches disk; it's deleted the moment the window ends.
-- **Start-up delay:** the mic takes a moment to open, so start speaking just after you press.
+- **Start-up delay:** the mic takes a moment to open, so start speaking just after you press. Noise suppression adds
+  about 0.15 seconds to this.
+- **Noise suppression:** while recording, macOS may turn other audio, such as music, down a little. On macOS 14
+  and later HoldTalk asks for the smallest change.
 - **Odd output in silence:** Whisper can invent text for very quiet audio. HoldTalk drops silent audio and Whisper's markers, but background noise can still get through.

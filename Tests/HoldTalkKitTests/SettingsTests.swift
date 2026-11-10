@@ -20,6 +20,12 @@ final class SettingsTests: XCTestCase {
         XCTAssertEqual(config.hotkey, "fn")
         XCTAssertEqual(config.maxRecordingSeconds, 300)
         XCTAssertFalse(config.restoreClipboard, "Leaves the transcript on the clipboard by default")
+        XCTAssertTrue(config.noiseSuppression, "Cuts background noise by default")
+    }
+
+    func testNoiseSuppressionCanBeTurnedOff() throws {
+        let config = try Config.parse(Data(#"{"noiseSuppression":false}"#.utf8))
+        XCTAssertFalse(config.noiseSuppression)
     }
 
     func testConfigReadsValuesAndRoundTrips() throws {

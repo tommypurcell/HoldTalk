@@ -30,12 +30,13 @@ To also remove settings and the speech model, see [UNINSTALL.md](UNINSTALL.md).
 
 The tray menu has **Open Settings File**, which opens
 `%APPDATA%\HoldTalk\config.json`. It uses the same keys as the Mac app (see
-[docs/guide.md](../docs/guide.md)), with two differences:
+[docs/guide.md](../docs/guide.md)), with three differences:
 
 - `hotkey` defaults to `right_ctrl`. You can also use `right_alt`, `right_shift`,
   `right_win` and the left versions, or a combination such as `ctrl+alt+space`.
   `fn` doesn't work, because Windows can't see that key.
 - `whisperPath` points to `whisper-cli.exe` if you want your own build.
+- `noiseSuppression` is Mac-only for now. Leave it out, or Windows reports an unknown setting.
 
 For cleanup, put API keys in `%APPDATA%\HoldTalk\.env`, as on the Mac. After
 editing, choose **Reload Settings**.
