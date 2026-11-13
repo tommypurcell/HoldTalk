@@ -40,7 +40,7 @@ menu. If the file has a mistake, the menu shows the error and the running settin
 | `hotkey` | `"fn"` | `fn`, `right_option`, `left_option`, `right_command`, `left_command`, `right_control`, `left_control`, `right_shift`, `left_shift`, or a combination such as `"control+option+space"` |
 | `transcriber` | `"local"` | `local`, `groq`, `openai` |
 | `transcriberModel` | Provider's default | Groq: `whisper-large-v3-turbo`. OpenAI: `gpt-transcribe`. |
-| `localModel` | `"small"` | `small`, `medium`, or a full path to a ggml model |
+| `localModel` | `"large-v3-turbo-q5_0"` | `large-v3-turbo-q5_0`, `small`, `medium`, or a full path to a ggml model |
 | `whisperPath` | Found automatically | Full path to `whisper-cli` |
 | `language` | `"auto"` | `auto` or a code such as `en`. Setting it improves accuracy on very short clips. |
 | `cleanupEnabled` | `true` | `false` pastes the raw transcript |

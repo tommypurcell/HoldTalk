@@ -9,7 +9,7 @@ const { spawnSync } = require("node:child_process");
 
 const packageRoot = path.resolve(__dirname, "..");
 const appPath = path.join(os.homedir(), "Applications", "HoldTalk.app");
-const modelPath = path.join(os.homedir(), ".config", "holdtalk", "models", "ggml-small.bin");
+const modelPath = path.join(os.homedir(), ".config", "holdtalk", "models", "ggml-large-v3-turbo-q5_0.bin");
 // Same places Config.swift looks for whisper-cli.
 const whisperPaths = [
   "/opt/homebrew/bin/whisper-cli",
@@ -88,7 +88,7 @@ function setup(options) {
     }
   }
   if (!fs.existsSync(modelPath)) {
-    if (!run("bash", ["scripts/download-model.sh", "small"])) {
+    if (!run("bash", ["scripts/download-model.sh", "large-v3-turbo-q5_0"])) {
       throw new Error("Couldn't download the speech model.");
     }
   }
