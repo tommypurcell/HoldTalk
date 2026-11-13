@@ -44,7 +44,7 @@ HoldTalk requires macOS 13 or later.
 git clone https://github.com/tommypurcell/HoldTalk.git
 cd HoldTalk
 brew install whisper-cpp
-scripts/download-model.sh small
+scripts/download-model.sh
 scripts/build-app.sh --install
 open ~/Applications/HoldTalk.app
 ```

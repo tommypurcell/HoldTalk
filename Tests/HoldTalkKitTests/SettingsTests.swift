@@ -40,7 +40,7 @@ final class SettingsTests: XCTestCase {
 
     func testModelNamesAndPaths() {
         var config = Config()
-        XCTAssertTrue(config.modelURL.path.hasSuffix(".config/holdtalk/models/ggml-small.bin"))
+        XCTAssertTrue(config.modelURL.path.hasSuffix(".config/holdtalk/models/ggml-large-v3-turbo-q5_0.bin"))
         config.localModel = "medium"
         XCTAssertTrue(config.modelURL.path.hasSuffix("ggml-medium.bin"))
         config.localModel = "/models/custom.bin"

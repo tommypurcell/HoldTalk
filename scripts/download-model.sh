@@ -1,11 +1,11 @@
 #!/bin/bash
-# Downloads a Whisper speech model. Usage: download-model.sh [small|medium]
+# Downloads a Whisper speech model. Usage: download-model.sh [large-v3-turbo-q5_0|small|medium]
 set -euo pipefail
 
-name="${1:-small}"
+name="${1:-large-v3-turbo-q5_0}"
 case "$name" in
-    small | medium | small.en | medium.en) ;;
-    *) echo "Choose small or medium."; exit 1 ;;
+    large-v3-turbo-q5_0 | small | medium | small.en | medium.en) ;;
+    *) echo "Choose large-v3-turbo-q5_0, small or medium."; exit 1 ;;
 esac
 
 folder="$HOME/.config/holdtalk/models"

@@ -21,7 +21,7 @@ scripts/build-app.sh             # Builds build/HoldTalk.app
 scripts/build-app.sh --install   # Also copies it to ~/Applications
 ```
 
-Whisper needs `brew install whisper-cpp` and `scripts/download-model.sh small`.
+Whisper needs `brew install whisper-cpp` and `scripts/download-model.sh`.
 
 ## Where things are
 

@@ -5,8 +5,8 @@ public struct Config: Codable, Equatable {
     public var hotkey = "fn"
     /// "local", "groq" or "openai".
     public var transcriber = "local"
-    /// "small", "medium", or a full path to a ggml model file.
-    public var localModel = "small"
+    /// "large-v3-turbo-q5_0", "small", "medium", or a full path to a ggml model file.
+    public var localModel = "large-v3-turbo-q5_0"
     /// Leave unset to look in the usual Homebrew folders.
     public var whisperPath: String?
     /// "auto" or a language code such as "en".
